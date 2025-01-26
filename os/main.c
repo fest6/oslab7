@@ -6,6 +6,8 @@ extern char s_bss[];
 extern char e_bss[];
 extern char ekernel[], skernel[];
 
+uint64 global_variable = 114514;
+
 void print_sysregs() {
     uint64 sstatus = r_sstatus();
     uint64 scause = r_scause();
@@ -32,6 +34,7 @@ void main() {
 
     printf("sysregs:\n");
     print_sysregs();
+    printf("%d", global_variable);
 
     while (1);
 }

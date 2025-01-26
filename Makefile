@@ -24,7 +24,7 @@ HEADER_DEP := $(addsuffix .d, $(basename $(C_OBJS)))
 
 -include $(HEADER_DEP)
 
-CFLAGS := -fPIE -fno-pic -fno-plt -Wall -Wno-unused-variable -Werror -O -fno-omit-frame-pointer -ggdb -march=rv64g
+CFLAGS := -fPIE -fno-pic -fno-plt -Wall -Wno-unused-variable -Werror -O2 -fno-omit-frame-pointer -ggdb -march=rv64g
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
 CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
@@ -47,8 +47,8 @@ else ifeq ($(LOG), trace)
 CFLAGS += -D LOG_LEVEL_TRACE
 endif
 
-INIT_PROC ?= usershell
-CFLAGS += -DINIT_PROC=\"$(INIT_PROC)\"
+# INIT_PROC ?= usershell
+# CFLAGS += -DINIT_PROC=\"$(INIT_PROC)\"
 
 # # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 # ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
