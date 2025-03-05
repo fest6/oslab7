@@ -20,20 +20,16 @@ void bootcpu_entry(int mhartid) {
     timer_init();
     plicinithart();
 
-    int labreport = 1;  // MODIFY ME: change this to 1 to work on the lab report.
+    uint64 reg;
 
-    if (labreport) {
-        uint64 reg;
+    asm volatile("mv %0, s11" : "=r"(reg));
+    printf("s11: %p\n", reg);
+    printf("calling ebreak...\n");
 
-        asm volatile("mv %0, s11" : "=r"(reg));
-        printf("s11: %p\n", reg);
-        printf("calling ebreak...\n");
+    asm volatile("ebreak" ::: "s11");
 
-        asm volatile("ebreak"::: "s11");
-
-        asm volatile("mv %0, s11" : "=r"(reg));
-        printf("s11: %p\n", reg);
-    }
+    asm volatile("mv %0, s11" : "=r"(reg));
+    printf("s11: %p\n", reg);
 
     intr_on();
     infof("boot cpu loops");
