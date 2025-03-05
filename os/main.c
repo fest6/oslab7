@@ -20,6 +20,8 @@ void bootcpu_entry(int mhartid) {
     timer_init();
     plicinithart();
 
+    intr_on();
+
     infof("boot cpu loops");
 
     while (1) {

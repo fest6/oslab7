@@ -1,4 +1,7 @@
 #include "trap.h"
+
+#define LOG_LEVEL_TRACE
+
 #include "defs.h"
 #include "console.h"
 #include "debug.h"
@@ -30,12 +33,12 @@ void kernel_trap(struct ktrapframe *ktf) {
         // handle interrupt
         switch (exception_code) {
             case SupervisorTimer:
-                tracef("s-timer interrupt, cycle: %d", r_time());
+                debugf("s-timer interrupt, cycle: %d", r_time());
                 set_next_timer();
                 // we never preempt kernel threads.
                 break;
             case SupervisorExternal:
-                tracef("s-external interrupt.");
+                debugf("s-external interrupt.");
                 plic_handle();
                 break;
             default:

@@ -60,7 +60,7 @@ void console_init() {
     set_reg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
 
     // enable receive interrupts.
-    set_reg(IER, IER_RX_ENABLE | IER_TX_ENABLE);
+    set_reg(IER, IER_RX_ENABLE);
     uart_inited = true;
 }
 
@@ -83,9 +83,9 @@ static void consintr(int c) {
 void uart_intr() {
     while (1) {
         int c = uartgetc();
+        // infof("uart: %d", c);
         if (c == -1)
             break;
-        // infof("uart: %c", c);
         consintr(c);
     }
 }
