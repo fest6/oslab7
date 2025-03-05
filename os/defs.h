@@ -11,8 +11,6 @@
 #include "log.h"
 #include "memlayout.h"
 #include "string.h"
-#include "lock.h"
-#include "smp.h"
 
 // clang-format on
 

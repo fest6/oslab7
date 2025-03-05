@@ -7,7 +7,6 @@
 static int uart_inited = false;
 static void uart_putchar(int);
 
-static struct spinlock uart_tx_lock;
 volatile int panicked = 0;
 
 #define BACKSPACE 0x100
@@ -51,7 +50,6 @@ void consputc(int c) {
 
 void console_init() {
     assert(!uart_inited);
-    spinlock_init(&uart_tx_lock, "uart_tx");
 
     // no need to init uart8250, they are already inited by OpenSBI.
 

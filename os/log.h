@@ -53,6 +53,10 @@ static inline int __safe_pid() {
     return -1;
 }
 
+static inline int cpuid() {
+    return 0;
+}
+
 enum LOG_COLOR {
     RED = 31,
     GREEN = 32,

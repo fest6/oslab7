@@ -19,7 +19,8 @@ void plicinit(void)
 
 void plicinithart(void)
 {
-	const int ctx = mycpu()->mhart_id * 2 + 1;
+	const int mhartid = 0;
+	const int ctx = mhartid * 2 + 1;
 
 	// base + 0x002000 + 0x80 + 0x100*hart
 	// Assumption: Each hart has two context, we use the last one referring to the S-mode context.
@@ -42,7 +43,8 @@ void plicinithart(void)
 // ask the PLIC what interrupt we should serve.
 int plic_claim(void)
 {
-	const int ctx = mycpu()->mhart_id * 2 + 1;
+	const int mhartid = 0;
+	const int ctx = mhartid * 2 + 1;
 
 	int irq = *(uint32 *)PLIC_SCLAIM(ctx);
 	return irq;
@@ -51,7 +53,8 @@ int plic_claim(void)
 // tell the PLIC we've served this IRQ.
 void plic_complete(int irq)
 {
-	const int ctx = mycpu()->mhart_id * 2 + 1;
+	const int mhartid = 0;
+	const int ctx = mhartid * 2 + 1;
 
 	*(uint32 *)PLIC_SCLAIM(ctx) = irq;
 }

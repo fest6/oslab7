@@ -3,7 +3,6 @@
 
 #include "types.h"
 #include "memlayout.h"
-#include "vm.h"
 #include "riscv-io.h"
 
 void consputc(int);
