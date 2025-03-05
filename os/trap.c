@@ -1,10 +1,10 @@
 #include "trap.h"
 
-#define LOG_LEVEL_TRACE
+#define LOG_LEVEL_DEBUG
 
-#include "defs.h"
 #include "console.h"
 #include "debug.h"
+#include "defs.h"
 #include "plic.h"
 #include "timer.h"
 
@@ -27,7 +27,7 @@ void kernel_trap(struct ktrapframe *ktf) {
     if ((r_sstatus() & SSTATUS_SPP) == 0)
         panic("kerneltrap: not from supervisor mode");
 
-    uint64 cause          = r_scause();
+    uint64 cause = r_scause();
     uint64 exception_code = cause & SCAUSE_EXCEPTION_CODE_MASK;
     if (cause & SCAUSE_INTERRUPT) {
         // handle interrupt
@@ -72,4 +72,3 @@ void set_kerneltrap() {
 void trap_init() {
     set_kerneltrap();
 }
-

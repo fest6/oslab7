@@ -24,25 +24,10 @@ void print_sysregs(int explain) {
     uint64 sip     = r_sip();
     uint64 satp    = r_satp();
     printf("sstatus : %p\n", sstatus);
-    if (explain)
-        printf("- SUM:%d, SPP:%c, SPIE:%d, SIE: %d\n",
-               (sstatus & SSTATUS_SUM) != 0,
-               ((sstatus & SSTATUS_SPP) ? 'S' : 'U'),
-               (sstatus & SSTATUS_SPIE) != 0,
-               (sstatus & SSTATUS_SIE) != 0);
     printf("scause  : %p\n", scause);
-    if (explain)
-        printf("- Interrupt:%d, Code:%d\n", (scause & SCAUSE_INTERRUPT) != 0, (scause & SCAUSE_EXCEPTION_CODE_MASK));
-
     printf("sepc    : %p\n", sepc);
     printf("stval   : %p\n", stval);
     printf("sip     : %p\n", sip);
-    if (explain)
-        printf("- Pending: Software:%d, Timer:%d, External:%d\n", (sip & SIE_SSIE) != 0, (sip & SIE_STIE) != 0, (sip & SIE_SEIE) != 0);
-
     printf("sie     : %p\n", sie);
-    if (explain)
-        printf("- Enabled: Software:%d, Timer:%d, External:%d\n", (sie & SIE_SSIE) != 0, (sie & SIE_STIE) != 0, (sie & SIE_SEIE) != 0);
-
     printf("satp    : %p\n", satp);
 }
