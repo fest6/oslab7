@@ -3,7 +3,7 @@
 
 #include "types.h"
 
-#define TICKS_PER_SEC (5)
+#define TICKS_PER_SEC (1)
 // QEMU
 #define CPU_FREQ (12500000)
 

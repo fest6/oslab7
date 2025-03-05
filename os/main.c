@@ -31,7 +31,7 @@ void bootcpu_entry(int mhartid) {
     asm volatile("mv %0, s11" : "=r"(reg));
     printf("s11: %p\n", reg);
 
-    intr_on();
+    // intr_on();
     infof("boot cpu loops");
 
     while (1) {
