@@ -96,9 +96,9 @@ void bootcpu_entry(int mhartid) {
 
     uint64 fn = (uint64)&bootcpu_init;
     uint64 sp = (uint64)&percpu_kstack[cpuid()];
-    asm volatile("mv a1, %0" ::"r"(fn));
-    asm volatile("mv sp, %0" ::"r"(sp));
-    asm volatile("jr a1");
+    asm volatile("mv a1, %0 \n \
+                  mv sp, %1 \n \
+                  jr a1" ::"r"(fn),"r"(sp));
 
     __builtin_unreachable();
 }
@@ -114,9 +114,9 @@ __noreturn void secondarycpu_entry(int hartid, int mycpuid) {
     // jump to percpu kernel stack
     uint64 fn = (uint64)&secondarycpu_init;
     uint64 sp = (uint64)&percpu_kstack[cpuid()];
-    asm volatile("mv a1, %0\n" ::"r"(fn));
-    asm volatile("mv sp, %0\n" ::"r"(sp));
-    asm volatile("jr a1");
+    asm volatile("mv a1, %0 \n \
+                  mv sp, %1 \n \
+                  jr a1" ::"r"(fn),"r"(sp));
 
     __builtin_unreachable();
 }

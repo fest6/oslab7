@@ -1,7 +1,6 @@
 #include "defs.h"
 #define NTHREAD 8
 
-struct proc* initproc;
 volatile uint64 count = 0;
 
 void worker(uint64 id) {
