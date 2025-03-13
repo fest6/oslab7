@@ -16,6 +16,10 @@ BUILDDIR = build
 C_SRCS := $(wildcard $K/*.c) $(wildcard $K/drivers/*.c)
 AS_SRCS := $(wildcard $K/*.S)
 
+# ifeq (,$(findstring $K/link_app.S,$(AS_SRCS)))
+#     AS_SRCS += $K/link_app.S
+# endif
+
 C_OBJS  := $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(C_SRCS))))
 AS_OBJS := $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(AS_SRCS))))
 OBJS 	:= $(C_OBJS) $(AS_OBJS)
@@ -27,7 +31,7 @@ HEADER_DEP := $(addsuffix .d, $(basename $(C_OBJS)))
 CFLAGS := -no-pie -Wall -Wno-unused-variable -Werror -O2 -fno-omit-frame-pointer -ggdb -march=rv64g
 CFLAGS += -MD
 CFLAGS += -mcmodel=medany
-CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax
+CFLAGS += -ffreestanding -fno-common -nostdlib -mno-relax -msmall-data-limit=0
 CFLAGS += -I$K
 CFLAGS += -std=gnu17
 CFLAGS += $(shell $(CC) -fno-stack-protector -E -x c /dev/null >/dev/null 2>&1 && echo -fno-stack-protector)
@@ -48,8 +52,8 @@ else ifeq ($(LOG), trace)
 CFLAGS += -D LOG_LEVEL_TRACE
 endif
 
-# INIT_PROC ?= usershell
-# CFLAGS += -DINIT_PROC=\"$(INIT_PROC)\"
+INIT_PROC ?= init
+CFLAGS += -DINIT_PROC=\"$(INIT_PROC)\"
 
 # # Disable PIE when possible (for Ubuntu 16.10 toolchain)
 # ifneq ($(shell $(CC) -dumpspecs 2>/dev/null | grep -e '[^f]no-pie'),)
@@ -61,7 +65,6 @@ endif
 
 # empty target
 .FORCE:
-
 
 $(AS_OBJS): $(BUILDDIR)/$K/%.o : $K/%.S
 	@mkdir -p $(@D)
@@ -77,6 +80,9 @@ $(HEADER_DEP): $(BUILDDIR)/$K/%.d : $K/%.c
         sed 's,\($*\)\.o[ :]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
         rm -f $@.$$$$
 
+$K/link_app.S: scripts/pack.py .FORCE
+	$(PY) scripts/pack.py
+
 build: build/kernel
 
 build/kernel: $(OBJS) os/kernel.ld
@@ -87,14 +93,19 @@ build/kernel: $(OBJS) os/kernel.ld
 	@echo 'Build kernel done'
 
 clean:
-	rm -rf $(BUILDDIR) os/kernel_app.ld
+	rm -rf $(BUILDDIR) os/kernel_app.ld os/link_app.S
+
+# BOARD
+BOARD		?= qemu
+SBI			?= rustsbi
+BOOTLOADER	:= ./bootloader/rustsbi-qemu.bin
 
 QEMU = qemu-system-riscv64
 QEMUOPTS = \
 	-nographic \
 	-machine virt \
-	-cpu rv64,svadu=off \
-	-m 512 \
+	-cpu rv64 \
+	-m 512M \
 	-kernel build/kernel	\
 
 run: build/kernel
@@ -113,10 +124,15 @@ debug: build/kernel .gdbinit
 	# sleep 1
 	# $(GDB)
 
+debugsmp: build/kernel .gdbinit
+	$(QEMU) $(QEMUOPTS) -smp 4 -S $(QEMUGDB)
+	# sleep 1
+	# $(GDB)
+
 CHAPTER ?= $(shell git rev-parse --abbrev-ref HEAD | grep -oP 'ch\K[0-9]')
 
 user:
-	make -C user CHAPTER=$(CHAPTER) BASE=$(BASE)
+	make -C user
 
 test: user run
 

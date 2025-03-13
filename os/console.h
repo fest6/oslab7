@@ -3,13 +3,18 @@
 
 #include "types.h"
 #include "memlayout.h"
-#include "riscv-io.h"
+#include "vm.h"
 
 void consputc(int);
 void uart_intr();
 void console_init();
+int64 user_console_write(uint64 __user buf, int64 len);
+int64 user_console_read(uint64 __user buf, int64 n);
 
 #define QEMU_UART0_IRQ  10
+#define VF2_UART0_IRQ   32
+
+extern int uart0_irq;
 
 // the UART control registers are memory-mapped
 // at address UART0. this macro returns the
@@ -36,13 +41,7 @@ void console_init();
 #define LSR_RX_READY (1<<0)   // input is waiting to be read from RHR
 #define LSR_TX_IDLE (1<<5)    // THR can accept another character to send
 
-// RISC-V Device MMIO Operations
-static inline void set_reg(uint32 reg, uint32 val) {
-    writeb(val, Reg(reg));
-}
-
-static inline uint32 read_reg(uint32 reg) {
-    return readb(Reg(reg));
-}
+#define ReadReg(reg) (*(Reg(reg)))
+#define WriteReg(reg, v) (*(Reg(reg)) = (v))
 
 #endif // CONSOLE_H

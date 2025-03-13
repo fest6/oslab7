@@ -2,6 +2,7 @@
 #define LOG_H
 
 #include "printf.h"
+#include "proc.h"
 
 extern void dummy(int, ...);
 extern void shutdown() __attribute__((noreturn));
@@ -50,11 +51,8 @@ extern void shutdown() __attribute__((noreturn));
 #endif  // LOG_LEVEL_TRACE
 
 static inline int __safe_pid() {
-    return -1;
-}
-
-static inline int cpuid() {
-    return 0;
+    struct proc *p = curr_proc();
+    return p ? p->pid : -1;
 }
 
 enum LOG_COLOR {

@@ -4,6 +4,8 @@
 #include "trap.h"
 #include "console.h"
 
+extern int on_vf2_board;
+
 //
 // the riscv Platform Level Interrupt Controller (PLIC).
 //
@@ -14,24 +16,24 @@ void plicinit(void)
 	// set desired IRQ priorities non-zero (otherwise disabled).
 	// Interrupt source: UART0 - 10
 
-	*(uint32 *)(KERNEL_PLIC_BASE + QEMU_UART0_IRQ * 4) = 1;
+	*(uint32 *)(KERNEL_PLIC_BASE + uart0_irq * 4) = 1;
+
+	//   *(uint32*)(KERNEL_PLIC_BASE + VIRTIO0_IRQ*4) = 1;
 }
 
 void plicinithart(void)
 {
-	const int mhartid = 0;
-	const int ctx = mhartid * 2 + 1;
+	int ctx = mycpu()->mhart_id * 2 + 1;
+	if (on_vf2_board) ctx--;
 
 	// base + 0x002000 + 0x80 + 0x100*hart
 	// Assumption: Each hart has two context, we use the last one referring to the S-mode context.
-	//	hart 0: context 0 -> M mode
-	//			context 1 -> S mode
-	//	hart 1: context 2 -> M mode
-	//			context 3 -> S mode
+	//	hart 0: context 1
+	//	hart 1: context 3
 
 	// set enable bits for this hart's S-mode for the uart.
-	uint32 off = QEMU_UART0_IRQ / 32;
-	uint32 bit = QEMU_UART0_IRQ % 32;
+	uint32 off = uart0_irq / 32;
+	uint32 bit = uart0_irq % 32;
 	*(uint32 *)(PLIC_SENABLE(ctx) + off * 4) |= (1 << bit);
 
 	// set this hart's S-mode priority threshold to 0.
@@ -43,8 +45,8 @@ void plicinithart(void)
 // ask the PLIC what interrupt we should serve.
 int plic_claim(void)
 {
-	const int mhartid = 0;
-	const int ctx = mhartid * 2 + 1;
+	int ctx = mycpu()->mhart_id * 2 + 1;
+	if (on_vf2_board) ctx--;
 
 	int irq = *(uint32 *)PLIC_SCLAIM(ctx);
 	return irq;
@@ -53,8 +55,8 @@ int plic_claim(void)
 // tell the PLIC we've served this IRQ.
 void plic_complete(int irq)
 {
-	const int mhartid = 0;
-	const int ctx = mhartid * 2 + 1;
+	int ctx = mycpu()->mhart_id * 2 + 1;
+	if (on_vf2_board) ctx--;
 
 	*(uint32 *)PLIC_SCLAIM(ctx) = irq;
 }

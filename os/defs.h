@@ -11,6 +11,10 @@
 #include "log.h"
 #include "memlayout.h"
 #include "string.h"
+#include "vm.h"
+#include "proc.h"
+#include "lock.h"
+#include "kalloc.h"
 
 // clang-format on
 
@@ -27,6 +31,9 @@
 #define MAX(a, b)      (a > b ? a : b)
 #define MEMORY_FENCE() __sync_synchronize()
 #define __noreturn     __attribute__((noreturn))
+
+// Kernel string buffer
+extern allocator_t kstrbuf;
 
 // kernel image symbols, defined in kernel.ld
 extern char skernel[], ekernel[];
