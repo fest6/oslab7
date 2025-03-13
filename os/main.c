@@ -19,12 +19,13 @@ __noreturn void secondarycpu_entry(int mhartid, int cpuid);
 
 static void bootcpu_init();
 static void secondarycpu_init();
-void init();
-static struct proc* initproc;
-
 static volatile int booted_count       = 0;
 static volatile int halt_specific_init = 0;
 int on_vf2_board = 0;
+
+// nommu_init.c:
+void init(uint64);
+extern struct proc* initproc;
 
 allocator_t kstrbuf;
 
@@ -33,22 +34,14 @@ allocator_t kstrbuf;
  * | Boot CPU |  cpuid = 0, m_hartid = random
  * ------------
  *      | OpenSBI
- * -------------------------
- * | _entry, bootcpu_entry |
- * -------------------------
+ * -------------------
+ * |      _entry     |
+ * -------------------
  *      | sp <= boot_stack (PA)
- * ----------------------------
- * | bootcpu_start_relocation |
- * ----------------------------
- *      | satp <= relocate_pagetable
- *      | sp   <= boot_stack (KIVA)
  * ----------------------
- * | bootcpu_relocating |
+ * | bootcpu_entry |
  * ----------------------
- *      | kvm_init : setup kernel_pagetable
- *      |
- *      | satp <= kernel_pagetable
- *      | sp   <= percpu_sched_stack (KVA)
+ *      | sp   <= percpu_kstack (PA)
  * ----------------
  * | bootcpu_init |
  * ----------------
@@ -59,13 +52,7 @@ allocator_t kstrbuf;
  *    |                                             ----------------------
  *    |                                             | secondarycpu_entry |
  *    |                                             ----------------------
- *    |                                                     | satp <= relocate_pagetable
- *    |                                                     | sp   <= boot_stack (KIVA)
- *    |                                             ---------------------------
- *    |                                             | secondarycpu_relocating |
- *    |                                             ---------------------------
- *    |                                                     | satp <= kernel_pagetable
- *    |                                                     | sp   <= percpu_sched_stack (KVA)
+ *    |                                                     | sp   <= percpu_kstack (PA)
  *    | wait for all cpu online                     ---------------------
  *    |                                             | secondarycpu_init |
  *    | platform level init :                       ---------------------
@@ -184,9 +171,7 @@ static void bootcpu_init() {
     timer_init();
     plicinithart();
 
-    initproc = create_kthread((uint64)init, 0x1919810);
-    add_task(initproc);
-    release(&initproc->lock);
+    create_kthread(init, 0x1919810);
 
     MEMORY_FENCE();
     halt_specific_init = 1;
@@ -211,37 +196,4 @@ static void secondarycpu_init() {
     scheduler();
 
     assert("scheduler returns");
-}
-
-uint64 count = 0;
-
-void worker(int id) {
-    for (int i = 0; i < 1000000; i++) {
-        count++;
-        if (count % 100 == 0) {
-            debugf("thread %d: count %d, yielding", id, count);
-            yield();
-        }
-    }
-    exit(id + 114514);
-}
-#define NTHREAD 8
-void init() {
-    infof("kthread: init starts!");
-    int pids[NTHREAD];
-    for (int i = 0; i < NTHREAD; i++) {
-        struct proc* p = create_kthread((uint64)worker, i);
-        p->parent      = initproc;
-        pids[i]        = p->pid;
-        add_task(p);
-        release(&p->lock);
-    }
-    int retcode;
-    for (int i = 0; i < NTHREAD; i++) {
-        int pid = wait(pids[i], &retcode);
-        infof("thread %d exited with code %d, expected %d", pid, retcode, i + 114514);
-    }
-    printf("kthread: all threads exited, count %d\n", count);
-    infof("kthread: init ends!");
-    exit(0);
 }
