@@ -112,7 +112,7 @@ void allocator_init(struct allocator *alloc, char *name, uint64 object_size, uin
     alloc->pool_base = allocator_mapped_va;
     alloc->pool_end  = alloc->pool_base + total_size;
 
-    infof("allocator %s inited base %p", name, alloc->pool_base);
+    infof("allocator %s inited, size %d, count %d, base %p, to %p", name, alloc->object_size_aligned, alloc->max_count, alloc->pool_base, alloc->pool_end);
 
     // add a significant gap between different types of objects.
     allocator_mapped_va += ROUNDUP_2N(total_size, KERNEL_ALLOCATOR_GAP);

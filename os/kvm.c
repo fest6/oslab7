@@ -1,5 +1,5 @@
-#include "defs.h"
 #include "vm.h"
+#include "defs.h"
 
 pagetable_t kernel_pagetable;
 static uint64 __kva init_page_allocator;
