@@ -8,6 +8,8 @@
 int uart0_irq;
 static int uart_inited = false;
 static void uart_putchar(int);
+extern void acquire_kprint(void);
+extern void release_kprint(void);
 
 static struct spinlock uart_tx_lock;
 volatile int panicked = 0;
@@ -103,7 +105,7 @@ void console_init() {
     set_reg(FCR, FCR_FIFO_ENABLE | FCR_FIFO_CLEAR);
 
     // enable receive interrupts.
-    set_reg(IER, IER_RX_ENABLE | IER_TX_ENABLE);
+    set_reg(IER, IER_RX_ENABLE);
     uart_inited = true;
 }
 
@@ -162,3 +164,106 @@ void uart_intr() {
     }
 }
 
+int64 user_console_write(uint64 __user buf, int64 len) {
+    if (len <= 0)
+        return -EINVAL;
+    len = MIN(len, PGSIZE);
+
+    int ret;
+    struct proc *p = curr_proc();
+    struct mm *mm;
+
+    char *kbuf = kallocpage();
+    if (kbuf == NULL) {
+        return -ENOMEM;
+    }
+    kbuf = (char *)PA_TO_KVA(kbuf);
+
+    acquire(&p->lock);
+    mm = p->mm;
+    acquire(&mm->lock);
+    release(&p->lock);
+
+    if ((ret = copy_from_user(mm, kbuf, buf, len)) < 0) {
+        release(&mm->lock);
+        goto err;
+    }
+    release(&mm->lock);
+
+    // do not interfere with kernel panic's print.
+    acquire_kprint();
+    // do not interfere with other user's print.
+    acquire(&uart_tx_lock);
+
+    for (int64 i = 0; i < len; i++) {
+        consputc(kbuf[i]);
+    }
+
+    release(&uart_tx_lock);
+    release_kprint();
+
+    kfreepage((void*)KVA_TO_PA(kbuf));
+    return len;
+
+err:
+    kfreepage((void*)KVA_TO_PA(kbuf));
+    return ret;
+}
+
+int64 user_console_read(uint64 __user buf, int64 n) {
+    uint target;
+    int c;
+    char cbuf;
+
+    target = n;
+    acquire(&cons.lock);
+    while (n > 0) {
+        // wait until interrupt handler has put some
+        // input into cons.buffer.
+        while (cons.r == cons.w) {
+            // if (curr_proc()->state != SLEEPING) {
+            // 	release(&cons.lock);
+            // 	return -1;
+            // }
+            sleep(&cons, &cons.lock);
+        }
+
+        c = cons.buf[cons.r++ % INPUT_BUF_SIZE];
+
+        if (c == C('D')) {  // end-of-file
+            if (n < target) {
+                // Save ^D for next time, to make sure
+                // caller gets a 0-byte result.
+                cons.r--;
+            }
+            break;
+        }
+
+        // copy the input byte to the user-space buffer.
+        cbuf = c;
+
+        struct proc *p = curr_proc();
+        acquire(&p->lock);
+        struct mm *mm = p->mm;
+        acquire(&mm->lock);
+        release(&p->lock);
+
+        if (copy_to_user(mm, (uint64)buf, &cbuf, 1) < 0) {
+            release(&mm->lock);
+            break;
+        }
+        release(&mm->lock);
+
+        buf++;
+        --n;
+
+        if (c == '\n') {
+            // a whole line has arrived, return to
+            // the user-level read().
+            break;
+        }
+    }
+    release(&cons.lock);
+
+    return target - n;
+}

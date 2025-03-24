@@ -33,6 +33,11 @@ static inline void w_sip(uint64 x) {
     asm volatile("csrw sip, %0" : : "r"(x));
 }
 
+static inline void w_stimecmp(uint64 x) {
+    // asm volatile("csrw stimecmp, %0" : : "r" (x));
+    asm volatile("csrw 0x14d, %0" : : "r"(x));
+}
+
 // Supervisor Interrupt Enable
 #define SIE_SEIE (1L << 9)  // external
 #define SIE_STIE (1L << 5)  // timer
@@ -81,9 +86,6 @@ static inline uint64 r_stvec() {
 // supervisor address translation and protection;
 // holds the address of the page table.
 static inline void w_satp(uint64 x) {
-    // NOMMU:
-    extern __attribute__((noreturn)) void __panic(char *fmt, ...);
-    __panic("nommu mode");
     asm volatile("csrw satp, %0" : : "r"(x));
 }
 

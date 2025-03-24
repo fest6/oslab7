@@ -1,5 +1,6 @@
 #include "defs.h"
 #include "kalloc.h"
+#include "loader.h"
 #include "proc.h"
 #include "queue.h"
 #include "trap.h"
@@ -33,10 +34,10 @@ static int all_dead() {
     int alive = 0;
     for (int i = 0; i < NPROC; i++) {
         struct proc *p = pool[i];
-        acquire(&p->lock);
+        // it's ok to read an out-dated UNUSED state,
+        //  so omit acquire&release here
         if (p->state != UNUSED)
             alive = true;
-        release(&p->lock);
         if (alive)
             break;
     }

@@ -13,12 +13,12 @@ PY = python3
 GDB = $(TOOLPREFIX)gdb
 CP = cp
 BUILDDIR = build
-C_SRCS := $(wildcard $K/*.c) $(wildcard $K/drivers/*.c)
+C_SRCS := $(wildcard $K/*.c) $(wildcard $K/drivers/*.c) $(wildcard $K/ktest/*.c)
 AS_SRCS := $(wildcard $K/*.S)
 
-# ifeq (,$(findstring $K/link_app.S,$(AS_SRCS)))
-#     AS_SRCS += $K/link_app.S
-# endif
+ifeq (,$(findstring $K/link_app.S,$(AS_SRCS)))
+    AS_SRCS += $K/link_app.S
+endif
 
 C_OBJS  := $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(C_SRCS))))
 AS_OBJS := $(addprefix $(BUILDDIR)/, $(addsuffix .o, $(basename $(AS_SRCS))))
@@ -85,15 +85,17 @@ $K/link_app.S: scripts/pack.py .FORCE
 
 build: build/kernel
 
-build/kernel: $(OBJS) os/kernel.ld
+build/kernel: user $(OBJS) os/kernel.ld
 	$(LD) $(LDFLAGS) -T os/kernel.ld -o $(BUILDDIR)/kernel $(OBJS)
 	$(OBJCOPY) -O binary $(BUILDDIR)/kernel $(BUILDDIR)/kernel.bin
+	$(OBJCOPY) --strip-unneeded $(BUILDDIR)/kernel $(BUILDDIR)/kernel.stripped
 	$(OBJDUMP) -S $(BUILDDIR)/kernel > $(BUILDDIR)/kernel.asm
 	$(OBJDUMP) -t $(BUILDDIR)/kernel | sed '1,/SYMBOL TABLE/d; s/ .* / /; /^$$/d' > $(BUILDDIR)/kernel.sym
 	@echo 'Build kernel done'
 
 clean:
 	rm -rf $(BUILDDIR) os/kernel_app.ld os/link_app.S
+	$(MAKE) -C user clean
 
 # BOARD
 BOARD		?= qemu
