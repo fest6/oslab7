@@ -114,7 +114,7 @@ void bootcpu_entry(int mhartid) {
 }
 
 __noreturn static void bootcpu_relocating() {
-    printf("Boot HART Relocated. We are at high address now! PC: %p, SP: %p\n", r_pc(), r_sp());
+    printf("Boot HART Relocated. We are at high address now! PC: %p\n", r_pc());
 
     // Step 4. Rebuild final kernel pagetable
     kvm_init();
