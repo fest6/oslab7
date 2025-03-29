@@ -15,6 +15,8 @@ static spinlock_t wait_lock;
 
 extern void sched_init();
 
+extern int lab5_trace_kallocpage;
+
 // initialize the proc table at boot time.
 void proc_init() {
     // we only init once.
@@ -64,6 +66,12 @@ static int allocpid() {
 static void first_sched_ret(void) {
     release(&curr_proc()->lock);
     intr_off();
+
+    if (lab5_trace_kallocpage)
+        vm_print(curr_proc()->mm->pgt);
+
+    lab5_trace_kallocpage = 0;
+
     usertrapret();
 }
 

@@ -167,12 +167,17 @@ int load_user_elf(struct user_app *app, struct proc *p, char *args[]) {
 #define INIT_PROC "init"
 extern struct proc *init_proc;  // defined in proc.c
 
+extern int lab5_trace_kallocpage;
+
 // load all apps and init the corresponding `proc` structure.
 int load_init_app() {
     struct user_app *app = get_elf(INIT_PROC);
     if (app == NULL) {
         panic("fail to lookup init elf %s", INIT_PROC);
     }
+
+    // Lab5 Report: 
+    lab5_trace_kallocpage = 1;
 
     struct proc *p = allocproc();
     if (p == NULL) {

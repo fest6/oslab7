@@ -12,6 +12,9 @@ struct {
 
 int kalloc_inited = 0;
 
+// xv6-lab5: trace kernel page allocation & free.
+// int lab5_trace_kallocpage = 0;
+
 extern uint64 __kva kpage_allocator_base;
 extern uint64 __kva kpage_allocator_size;
 static spinlock_t kpagelock;
@@ -48,6 +51,9 @@ void kfreepage(void *__pa pa) {
 
     if (kalloc_inited)
         debugf("free: %p", pa);
+    
+    if (lab5_trace_kallocpage)
+        infof("lab5-trace: %p", pa);
 
     acquire(&kpagelock);
     l             = (struct linklist *)kvaddr;
@@ -80,6 +86,10 @@ void *__pa kallocpage() {
         warnf("out of memory, called by %p", ra);
         return 0;
     }
+    
+    if (lab5_trace_kallocpage)
+        infof("lab5-trace: %p", KVA_TO_PA((uint64)l));
+
     return (void *)KVA_TO_PA((uint64)l);
 }
 
