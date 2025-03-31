@@ -5,6 +5,7 @@
 int main(void) {
     printf("init: I am the first user program!\n");
 
+    // asm volatile(" csrw stvec, %0" : : "r"(0x80000000));
     char buf[200];
     memset(buf, 'A', sizeof(buf));
 

@@ -145,9 +145,13 @@ static void handle_pgfault(void) {
 }
 
 static void unknown_trap(void) {
-    print_sysregs(true);
-    vm_print(curr_proc()->mm->pgt);
     errorf("unknown trap: %p, stval = %p", r_scause(), r_stval());
+    print_sysregs(true);
+    errorf("trapframe:");
+    struct trapframe *tf = curr_proc()->trapframe;
+    print_trapframe(tf);
+    errorf("user page table:");
+    vm_print(curr_proc()->mm->pgt);
     setkilled(curr_proc());
 }
 
