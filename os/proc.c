@@ -5,6 +5,7 @@
 #include "loader.h"
 #include "queue.h"
 #include "trap.h"
+#include "debug.h"
 
 struct proc *pool[NPROC];
 struct proc *init_proc = NULL;

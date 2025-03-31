@@ -177,7 +177,7 @@ int load_init_app() {
     }
 
     // Lab5 Report: 
-    lab5_trace_kallocpage = 1;
+    // lab5_trace_kallocpage = 1;
 
     struct proc *p = allocproc();
     if (p == NULL) {

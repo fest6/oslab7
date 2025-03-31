@@ -13,7 +13,7 @@ struct {
 int kalloc_inited = 0;
 
 // xv6-lab5: trace kernel page allocation & free.
-// int lab5_trace_kallocpage = 0;
+int lab5_trace_kallocpage = 0;
 
 extern uint64 __kva kpage_allocator_base;
 extern uint64 __kva kpage_allocator_size;
