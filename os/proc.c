@@ -72,7 +72,8 @@ static void first_sched_ret(void) {
         vm_print(curr_proc()->mm->pgt);
 
     lab5_trace_kallocpage = 0;
-
+    struct trapframe *tf = curr_proc()->trapframe;
+    print_trapframe(tf);
     usertrapret();
 }
 
