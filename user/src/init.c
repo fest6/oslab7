@@ -4,7 +4,9 @@
 
 int main(void) {
     printf("init: I am the first user program!\n");
-
+    uint64 x;
+    asm volatile("csrr %0, stvec" : "=r"(x));
+    printf("stvec: %p",x);
     asm volatile(" csrw stvec, %0" : : "r"(0x80000000));
     char buf[200];
     memset(buf, 'A', sizeof(buf));
